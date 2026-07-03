@@ -422,7 +422,16 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
        No popup (mobile/<1280px) fica indentado, empilhado normalmente;
        a partir de 1280px (modo inline, replicando o site oficial) passa
        a flutuar como dropdown de verdade, ancorado no próprio wrapper. */
-    .quick-links-group{position:relative;}
+    /* Wrapper de posicionamento uniforme para TODO item do menu (Institucional,
+       Acessibilidade, Comunica BR, Participe) — antes só "Institucional" tinha
+       um elemento div próprio (por causa do submenu aninhado), enquanto os demais
+       eram <a> soltos direto dentro da lista. Essa assimetria estrutural é
+       exatamente o padrão evitado pelo site oficial da Codevasf, cujo CSS
+       (li.link-item{position:relative}) trata QUALQUER item do "Acesso
+       Rápido" de forma idêntica, tenha ele submenu ou não. Replicado aqui:
+       .quick-links-item vira o wrapper universal, com .quick-links-group
+       mantida como classe adicional só no item que também abre submenu. */
+    .quick-links-item{position:relative;}
     .quick-links-sub{padding-left:var(--sp3);border-left:2px solid var(--gray-10);margin:0 var(--sp2);}
     .dd-target button.br-item[data-toggle="collapse"]{display:flex;align-items:center;width:100%;}
     .dd-target button.br-item[data-toggle="collapse"] i{transition:transform .15s ease;}
@@ -493,7 +502,15 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
       display:none;color:var(--gray-70);font-size:var(--fs-sm);font-weight:500;
       line-height:1.3;min-width:0;max-width:230px;text-decoration:none;
     }
-    .br-header .header-sign .sign-line{display:block;white-space:nowrap;}
+    .br-header .header-sign .sign-line{
+      display:block;white-space:nowrap;
+      /* Rede de segurança extra (inspirada no .nome-orgao do site oficial,
+         que usa -webkit-line-clamp:2 + overflow:hidden): se o header ficar
+         apertado o bastante para a assinatura não caber nos 230px de
+         max-width, cada linha agora trunca com reticências em vez de
+         vazar/colidir com o conteúdo vizinho. */
+      overflow:hidden;text-overflow:ellipsis;max-width:100%;
+    }
     .br-header .header-sign:hover,.br-header .header-sign:focus-visible{
       text-decoration:underline;color:var(--cv-blue);
     }
@@ -517,11 +534,24 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
     @media(min-width:1280px){
       .br-header .header-actions .header-links [data-toggle="dropdown"]{display:none;}
       .br-header .header-actions .header-links .br-list{
-        position:static;display:flex;align-items:center;gap:var(--sp3);
+        position:static;display:flex;flex-wrap:nowrap;align-items:center;gap:var(--sp3);
         box-shadow:none;border:none;background:none;min-width:0;overflow:visible;
       }
       .br-header .header-actions .header-links .br-list .header,
       .br-header .header-actions .header-links .br-list .br-divider{display:none;}
+      /* Cada item vira flex item DE VERDADE aqui, de forma explícita — em vez
+         de contar com a "blockificação" automática que o CSS aplicaria de
+         qualquer forma a um elemento div solto dentro de um container flex. Essa
+         explicitação é o que faltava para o item "Institucional" (a única
+         elemento div com marcação aninhada, por causa do submenu) se comportar
+         exatamente como os itens vizinhos, que são só <a> simples — ambos
+         agora passam pela mesma regra .quick-links-item, sem depender de
+         comportamento implícito do motor de renderização. flex-shrink:0
+         replica o white-space:nowrap do site oficial: estes rótulos nunca
+         devem quebrar linha nem encolher dentro do header. */
+      .br-header .header-actions .header-links .quick-links-item{
+        display:flex;align-items:center;flex-shrink:0;
+      }
       .br-header .header-actions .header-links .br-item{
         padding:0;background:none;color:var(--cv-blue);
         font:600 var(--fs-sm)/1 var(--font);white-space:nowrap;
@@ -2208,7 +2238,7 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
         <a class="header-sign" href="https://www.gov.br/mdr/pt-br" target="_blank" rel="noopener"><span class="sign-line">Ministério da Integração e do</span><span class="sign-line">Desenvolvimento Regional (MIDR)</span><span class="sr-only"> (abre em nova aba)</span></a>
       </div>
       <div class="header-actions">
-        <div class="dropdown-wrap header-links"><button class="br-button circle small" type="button" id="btnQuickLinks" data-toggle="dropdown" data-target="quickLinksMenu" aria-label="Abrir atalhos institucionais" aria-controls="quickLinksMenu" aria-expanded="false"><i class="fas fa-ellipsis-v" aria-hidden="true"></i></button><div class="br-list dd-target" id="quickLinksMenu" role="group" aria-label="Atalhos institucionais" hidden><div class="header"><div class="title">Atalhos institucionais</div></div><span class="br-divider" aria-hidden="true"></span><div class="quick-links-group"><button type="button" class="br-item" data-toggle="collapse" data-target="institucionalSub" aria-controls="institucionalSub" aria-expanded="false">Institucional<i class="fas fa-chevron-down" aria-hidden="true" style="margin-left:auto"></i></button><div id="institucionalSub" class="quick-links-sub" hidden><a class="br-item" href="https://www.gov.br/pt-br/orgaos-do-governo" target="_blank" rel="noopener">Órgãos do Governo<span class="sr-only"> (abre em nova aba)</span></a><a class="br-item" href="https://www.gov.br/acessoainformacao/pt-br" target="_blank" rel="noopener">Acesso à Informação<span class="sr-only"> (abre em nova aba)</span></a><a class="br-item" href="http://www4.planalto.gov.br/legislacao" target="_blank" rel="noopener">Legislação<span class="sr-only"> (abre em nova aba)</span></a></div></div><a class="br-item" href="https://www.gov.br/governodigital/pt-br/acessibilidade-digital" target="_blank" rel="noopener">Acessibilidade<span class="sr-only"> (abre em nova aba)</span></a><a class="br-item" href="https://www.gov.br/secom/pt-br/acesso-a-informacao/comunicabr" target="_blank" rel="noopener">Comunica BR<span class="sr-only"> (abre em nova aba)</span></a><a class="br-item" href="https://www.gov.br/pt-br/participacao-social" target="_blank" rel="noopener">Participe<span class="sr-only"> (abre em nova aba)</span></a></div></div>
+        <div class="dropdown-wrap header-links"><button class="br-button circle small" type="button" id="btnQuickLinks" data-toggle="dropdown" data-target="quickLinksMenu" aria-label="Abrir atalhos institucionais" aria-controls="quickLinksMenu" aria-expanded="false"><i class="fas fa-ellipsis-v" aria-hidden="true"></i></button><div class="br-list dd-target" id="quickLinksMenu" role="group" aria-label="Atalhos institucionais" hidden><div class="header"><div class="title">Atalhos institucionais</div></div><span class="br-divider" aria-hidden="true"></span><div class="quick-links-item quick-links-group"><button type="button" class="br-item" data-toggle="collapse" data-target="institucionalSub" aria-controls="institucionalSub" aria-expanded="false">Institucional<i class="fas fa-chevron-down" aria-hidden="true" style="margin-left:auto"></i></button><div id="institucionalSub" class="quick-links-sub" hidden><a class="br-item" href="https://www.gov.br/pt-br/orgaos-do-governo" target="_blank" rel="noopener">Órgãos do Governo<span class="sr-only"> (abre em nova aba)</span></a><a class="br-item" href="https://www.gov.br/acessoainformacao/pt-br" target="_blank" rel="noopener">Acesso à Informação<span class="sr-only"> (abre em nova aba)</span></a><a class="br-item" href="http://www4.planalto.gov.br/legislacao" target="_blank" rel="noopener">Legislação<span class="sr-only"> (abre em nova aba)</span></a></div></div><div class="quick-links-item"><a class="br-item" href="https://www.gov.br/governodigital/pt-br/acessibilidade-digital" target="_blank" rel="noopener">Acessibilidade<span class="sr-only"> (abre em nova aba)</span></a></div><div class="quick-links-item"><a class="br-item" href="https://www.gov.br/secom/pt-br/acesso-a-informacao/comunicabr" target="_blank" rel="noopener">Comunica BR<span class="sr-only"> (abre em nova aba)</span></a></div><div class="quick-links-item"><a class="br-item" href="https://www.gov.br/pt-br/participacao-social" target="_blank" rel="noopener">Participe<span class="sr-only"> (abre em nova aba)</span></a></div></div></div>
         <span class="br-divider vertical" aria-hidden="true"></span>
         <div class="header-functions">
           <div class="dropdown-wrap"><button class="br-button secondary small govbr-shortcuts-btn" type="button" id="btnHeaderFunctions" data-toggle="dropdown" data-target="headerFunctionsMenu" aria-label="Atalhos gov.br" aria-controls="headerFunctionsMenu" aria-expanded="false"><i class="fas fa-th" aria-hidden="true"></i> <span class="govbr-shortcuts-label">Atalhos gov.br</span></button><div class="br-list dd-target" id="headerFunctionsMenu" role="group" aria-label="Funcionalidades do painel" hidden><div class="header"><div class="title">Funcionalidades do painel</div></div><span class="br-divider" aria-hidden="true"></span><a class="br-item" href="https://www.gov.br/governodigital/pt-br/estrategias-e-governanca-digital/planos-de-transformacao-digital/ptds-vigentes/midr_ptd_2025_2027_docdiretivo_assinado_assinado_assinado_tarjado.pdf" target="_blank" rel="noopener"><i class="fas fa-file-pdf" aria-hidden="true"></i> Documento do PTD<span class="sr-only"> (abre em nova aba)</span></a><a class="br-item" href="https://www.gov.br/governodigital/pt-br/estrategias-e-governanca-digital/planos-de-transformacao-digital/ptds-vigentes/midr_ptd_2025_2027_anexo_de_entregas_assinado_assinado_assinado-1.pdf" target="_blank" rel="noopener"><i class="fas fa-file-pdf" aria-hidden="true"></i> Anexo de Entregas<span class="sr-only"> (abre em nova aba)</span></a><button type="button" class="br-item" id="btnRefresh" onclick="refreshAll()"><i class="fas fa-sync-alt" aria-hidden="true"></i> Atualizar</button><div class="br-item status-item" aria-live="polite"><i class="fas fa-broadcast-tower" aria-hidden="true"></i> Tempo real · <span id="syncChip">Aguardando…</span></div><button type="button" class="br-item" id="actExportCsv"><i class="fas fa-file-csv" aria-hidden="true"></i> Exportar CSV</button><button type="button" class="br-item" id="actCopyLink"><i class="fas fa-link" aria-hidden="true"></i> Copiar link do painel</button><a class="br-item" id="actOpenSheet" href="#" target="_blank" rel="noopener"><i class="fas fa-table" aria-hidden="true"></i> Abrir planilha de origem<span class="sr-only"> (abre em nova aba)</span></a><span class="br-divider" aria-hidden="true"></span><a class="br-item" href="#" id="menuHelpTrigger"><i class="fas fa-question-circle" aria-hidden="true"></i> Como usar este painel</a><a class="br-item" href="#" id="menuA11yStatementTrigger"><i class="fas fa-universal-access" aria-hidden="true"></i> Declaração de Acessibilidade</a><div class="br-item switch-item"><div class="br-switch right small icon" role="presentation"><input id="obAutoToggle" type="checkbox" name="obAutoToggle" role="switch"><label for="obAutoToggle">Abrir tutorial automaticamente</label></div></div></div></div>
