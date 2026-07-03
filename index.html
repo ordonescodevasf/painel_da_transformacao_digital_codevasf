@@ -334,8 +334,8 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
     body.contraste-alto{background:#000;}
     body.contraste-alto::before{display:none;}
     body.contraste-alto .br-header{background:#000;border-bottom-color:var(--gold-vivid-20);}
-    body.contraste-alto .br-header .header-title{color:#fff;}
-    body.contraste-alto .br-header .header-subtitle{color:#ffe9a8;}
+    body.contraste-alto .header-bottom-wrap .header-title{color:#fff;}
+    body.contraste-alto .header-bottom-wrap .header-subtitle{color:#ffe9a8;}
     /* A logo institucional é um JPEG com fundo branco embutido — sobre o
        fundo preto do modo alto contraste isso vira "área com interferência"
        (Manual da Marca v.3, p.8). Nessas condições o manual orienta usar a
@@ -438,12 +438,38 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
     .dd-target button.br-item[aria-expanded="true"] i{transform:rotate(180deg);}
     .br-header{
       background:var(--background);
-      box-shadow:var(--sh-sm);
-      padding:var(--sp2) 0;
+      /* box-shadow e border-bottom mudaram para .header-bottom-wrap (ver
+         abaixo): agora ele é o último bloco visual do cabeçalho tanto no
+         desktop quanto no mobile, então é ele quem "fecha" visualmente o
+         cabeçalho com sombra + friso azul, não mais o header-top isolado. */
+      padding-top:var(--sp2);
       position:sticky;top:0;z-index:var(--z-layer-3);
-      border-bottom:var(--w-lg) solid var(--cv-blue);
     }
+    body.contraste-alto .br-header{background:#000;}
     .br-header .container-lg{
+      max-width:100%;margin:0 auto;
+      padding:0 16px;width:100%;
+    }
+    /* ── header-bottom-wrap (Título + Busca, itens 3/4 da Anatomia): a
+       partir da v135 vive como irmão da tag header (ver comentário no HTML),
+       com posicionamento sticky PRÓPRIO. O "top" onde ele gruda é dado pela
+       variável --header-bottom-top, calculada em JS (função
+       syncHeaderStickyOffsets): no desktop ela vale a altura do header-top
+       (para os dois ficarem colados, empilhados, como sempre foram — mesmo
+       efeito visual de antes, só que agora com dois elementos sticky em vez
+       de um); no mobile ela vale 0 (só este bloco fica fixo; o header-top —
+       logo/atalhos/Entrar — rola para fora normalmente, replicando o site
+       oficial da Codevasf). ── */
+    .header-bottom-wrap{
+      background:var(--background);
+      box-shadow:var(--sh-sm);
+      border-bottom:var(--w-lg) solid var(--cv-blue);
+      padding:var(--sp2) 0;
+      position:sticky;top:var(--header-bottom-top, 83px);
+      z-index:var(--z-layer-3);
+    }
+    body.contraste-alto .header-bottom-wrap{background:#000;border-bottom-color:var(--gold-vivid-20);}
+    .header-bottom-wrap .container-lg{
       max-width:100%;margin:0 auto;
       padding:0 16px;width:100%;
     }
@@ -456,10 +482,10 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
        Antes este painel usava 1440px fixo, um valor fora da escala oficial
        e sem variação por breakpoint. */
     @media(min-width:1280px){
-      .br-header-topbar .container-lg,.br-header .container-lg{max-width:1200px;}
+      .br-header-topbar .container-lg,.br-header .container-lg,.header-bottom-wrap .container-lg{max-width:1200px;}
     }
     @media(min-width:1600px){
-      .br-header-topbar .container-lg,.br-header .container-lg{max-width:1560px;}
+      .br-header-topbar .container-lg,.br-header .container-lg,.header-bottom-wrap .container-lg{max-width:1560px;}
     }
     .br-header .header-top{
       display:flex;justify-content:space-between;align-items:center;gap:var(--sp2);
@@ -575,16 +601,45 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
        separada acima do header). Sem o modificador "inverted": aqui o
        fundo é claro (var(--background)), não a faixa escura de antes. ── */
     .br-header .header-actions .br-switch{flex-shrink:0;}
-    /* Abaixo de 576px o logo-codevasf-wrap tem min-width:140px (não
-       encolhe) — nessas larguras o header-actions pode não caber ao lado
-       do logo. Em vez de vazar horizontalmente, deixamos o header-actions
-       descer para a própria linha dentro do header-top (ele já quebra
-       seus próprios filhos via flex-wrap). */
-    @media(max-width:575.98px){
-      .br-header .header-top{flex-wrap:wrap;row-gap:var(--sp1);}
-      .br-header .header-actions{justify-content:flex-start;width:100%;}
-      /* Como a linha de ações passa a ficar ancorada à esquerda (regra acima),
-         os acionadores de dropdown (Atalhos institucionais, Atalhos gov.br)
+    /* ══════════════════════════════════════════════════════════
+       MOBILE/TABLET (≤991.98px) — header-top compacto, 1 linha só
+       ══════════════════════════════════════════════════════════
+       Antes desta v135, abaixo de 576px o header-actions virava
+       width:100% + flex-wrap, o que empurrava "Entrar com gov.br"
+       para uma 3ª linha inteira (esticado, ocupando a largura toda) —
+       exatamente o problema relatado pelo usuário comparando com o
+       site oficial: lá, do lado da logo (bem menor) já vêm os ⋮, os
+       Atalhos gov.br e o Entrar, todos pequenos, numa linha só. É
+       isso que este bloco replica: encolhe a logo agressivamente,
+       força header-actions em nowrap (sem quebrar linha) e reduz o
+       padding dos botões — removendo de vez o width:100%/flex-wrap
+       que causava a 3ª linha. */
+    @media(max-width:991.98px){
+      /* Sticky desacoplado (ver .header-bottom-wrap, que assumiu sozinho
+         a sombra/friso azul/posição fixa): o header-top volta a rolar
+         normalmente junto com o resto da página — só Título+Busca
+         permanecem fixos ao rolar, como no site oficial. */
+      .br-header{position:static;}
+      /* Logo bem menor — replicando o "do lado da logo, que fica MUITO
+         menor" pedido pelo usuário. min-width:0 permite encolher além
+         dos 140px fixos usados no desktop. */
+      .br-header .logo-codevasf-wrap{min-width:0;padding-right:4px;}
+      .br-header .logo-codevasf{max-height:22px;max-width:112px;}
+      .br-header .header-logo .br-divider{height:22px;}
+      /* header-top nunca mais quebra linha nesta faixa — tudo (logo + ⋮ +
+         Atalhos gov.br + Entrar) cabe numa única linha compacta. */
+      .br-header .header-top{flex-wrap:nowrap;}
+      .br-header .header-actions{flex-wrap:nowrap;justify-content:flex-end;gap:6px;}
+      .br-header .header-actions .br-divider.vertical{display:none;}
+      /* Atalhos gov.br: só o ícone aparece nesta faixa (rótulo já se
+         escondia via .govbr-shortcuts-label acima) — padding reduzido
+         para o pill ficar compacto, do tamanho de um botão circular. */
+      .br-header .header-functions .govbr-shortcuts-btn{padding:6px 10px;}
+      /* Entrar com gov.br: nunca esticar. Isso substitui o comportamento
+         antigo (width:100% herdado do header-actions) que fazia esse
+         botão ocupar a tela inteira numa linha própria. */
+      .br-header .br-sign-in{flex-shrink:0;padding:0 var(--sp2);font-size:var(--fs-sm);}
+      /* Os acionadores de dropdown (Atalhos institucionais, Atalhos gov.br)
          ficam coladas à borda esquerda da tela. O .dd-target deles, porém,
          segue herdando right:0 da regra base — pensada para o caso em que a
          linha de ações fica à direita do header (≥576px). Abrir para a
@@ -600,19 +655,19 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
        lupa, o input substitui temporariamente a área de ações, ocupando
        toda a largura do cabeçalho; um botão circular "fechar" devolve o
        header ao estado anterior. */
-    .br-header .header-search{
+    .header-bottom-wrap .header-search{
       display:none;align-items:center;gap:var(--sp2);
       padding:0 0 var(--sp2);
     }
-    .br-header .header-search.active{display:flex;}
-    .br-header .header-search .br-input{flex:1;position:relative;display:flex;align-items:center;}
-    .br-header .header-search .br-input label{position:absolute;left:-9999px;}
-    .br-header .header-search .br-input input{
+    .header-bottom-wrap .header-search.active{display:flex;}
+    .header-bottom-wrap .header-search .br-input{flex:1;position:relative;display:flex;align-items:center;}
+    .header-bottom-wrap .header-search .br-input label{position:absolute;left:-9999px;}
+    .header-bottom-wrap .header-search .br-input input{
       width:100%;height:40px;border:1px solid var(--gray-40);border-radius:var(--r-sm);
       background:var(--pure-0);padding:0 44px 0 var(--sp2);font:400 13px var(--font);
     }
-    .br-header .header-search .br-input input:focus{border-color:var(--interactive);background:var(--blue-warm-vivid-5);outline:none;}
-    .br-header .header-search .br-input .br-button{position:absolute;right:4px;top:50%;transform:translateY(-50%);}
+    .header-bottom-wrap .header-search .br-input input:focus{border-color:var(--interactive);background:var(--blue-warm-vivid-5);outline:none;}
+    .header-bottom-wrap .header-search .br-input .br-button{position:absolute;right:4px;top:50%;transform:translateY(-50%);}
     @media(min-width:576px){
       /* Breakpoint alinhado ao "Comportamento 3 (Busca)" do gov.br DS citado
          acima (telas largas = input comum; telas estreitas = ícone), que usa
@@ -624,28 +679,28 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
          definido nele absorve o excesso quebrando para uma 2ª linha, em vez
          de vazar a viewport (e agora há overflow-x:hidden no body como
          reforço). */
-      .br-header .header-search-trigger{display:none;}
-      .br-header .header-search{display:flex;padding:0;max-width:320px;margin-left:auto;}
+      .header-bottom-wrap .header-search-trigger{display:none;}
+      .header-bottom-wrap .header-search{display:flex;padding:0;max-width:320px;margin-left:auto;}
     }
     /* ── Header-bottom / header-menu / header-title (itens 3 e 4 da Anatomia):
        o Título é o ÚNICO elemento obrigatório do componente Header — por isso
        fica em um bloco estruturalmente separado de logo/assinatura/ações,
        reproduzindo .header-bottom > .header-menu > .header-info do DS. ── */
-    .br-header .header-bottom{
-      display:flex;justify-content:space-between;align-items:flex-start;
-      margin-top:var(--sp2);
+    .header-bottom-wrap .header-bottom{
+      display:flex;justify-content:space-between;align-items:center;
+      gap:var(--sp2);
     }
-    .br-header .header-menu{display:flex;align-items:flex-start;flex:1;min-width:0;}
-    .br-header .header-menu-trigger{margin-right:var(--sp2);margin-top:2px;flex-shrink:0;}
-    .br-header .header-info{min-width:0;}
-    .br-header .header-title{
+    .header-bottom-wrap .header-menu{display:flex;align-items:flex-start;flex:1;min-width:0;}
+    .header-bottom-wrap .header-menu-trigger{margin-right:var(--sp2);margin-top:2px;flex-shrink:0;}
+    .header-bottom-wrap .header-info{min-width:0;}
+    .header-bottom-wrap .header-title{
       color:var(--color);font-weight:700;text-transform:uppercase;
       font-size:var(--fs-base);line-height:1.25;letter-spacing:.2px;
       /* Especificação Header > Título > Quantidade de Caracteres: até 2
          linhas; acima disso, truncar com elipse. */
       display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
     }
-    .br-header .header-subtitle{
+    .header-bottom-wrap .header-subtitle{
       display:none;color:var(--gray-70);font-weight:500;
       /* Especificação pede text-transform:lowercase, mas o subtítulo aqui
          contém a sigla "(PTD)" — minúsculo ficaria "(ptd)", quebrando a
@@ -1070,6 +1125,26 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
     #navigation{position:sticky;top:var(--header-h, 83px);z-index:calc(var(--z-layer-3) - 1);}
     .tab-nav{overflow-x:auto;scrollbar-width:none;}
     .tab-nav::-webkit-scrollbar{display:none;}
+    @media(max-width:767.98px){
+      /* Pista visual de rolagem horizontal: sem isso, uma aba parcialmente
+         cortada na borda da tela (ex.: "Acompanhamento de Projetos" em
+         celulares estreitos) parece um bug de layout, não um convite para
+         rolar. O gradiente de desvanecimento comunica "tem mais conteúdo
+         aqui" sem precisar de seta ou texto. Fica em .tab-bar-row (que NÃO
+         tem scroll próprio) e não em .tab-nav (que tem overflow-x:auto) —
+         se ficasse dentro do elemento que rola, o próprio gradiente rolaria
+         junto com o conteúdo em vez de ficar fixo na borda visível. Restrito
+         a telas estreitas, faixa em que .tab-bar-actions (sino de alertas
+         etc.) já quebra para a própria linha via flex-wrap, deixando o
+         tab-nav sozinho na linha — então o gradiente nunca cobre o sino. */
+      .tab-bar-row{position:relative;}
+      .tab-bar-row::after{
+        content:"";position:absolute;top:0;right:0;bottom:0;width:28px;
+        background:linear-gradient(to right,transparent,var(--pure-0));
+        pointer-events:none;z-index:1;
+      }
+      .tab-item button{padding:12px 10px;}
+    }
     .tab-nav ul{display:flex;align-items:center;gap:2px;list-style:none;margin:0;padding:0;}
     .tab-item{display:flex;}
     .tab-item button{display:inline-flex;align-items:center;gap:7px;
@@ -2136,10 +2211,17 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
       .hero-desc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none;}
       .page-cnt{padding:var(--sp4) var(--sp4) var(--sp8);}
       .br-header .container-lg{padding:0 var(--sp4);}
+      .header-bottom-wrap .header-title{font-size:var(--fs-md);}
+      .header-bottom-wrap .header-subtitle{display:block;}
+    }
+    /* 992px = breakpoint DS "Tablet Landscape" — só a partir daqui a logo
+       volta ao tamanho médio e a assinatura textual do MIDR aparece ao
+       lado dela. Abaixo disso (mobile e tablet portrait/landscape), o
+       header fica no modo compacto: logo pequena, sem texto de assinatura,
+       replicando o cabeçalho do site oficial da Codevasf no celular. */
+    @media(min-width:992px){
       .br-header .logo-codevasf{max-height:38px;max-width:210px;}
       .br-header .header-sign{display:block;}
-      .br-header .header-title{font-size:var(--fs-md);}
-      .br-header .header-subtitle{display:block;}
     }
     @media(min-width:1201px){
       .kpi-grid{grid-template-columns:repeat(5,minmax(0,1fr));}
@@ -2243,10 +2325,32 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
         <div class="header-functions">
           <div class="dropdown-wrap"><button class="br-button secondary small govbr-shortcuts-btn" type="button" id="btnHeaderFunctions" data-toggle="dropdown" data-target="headerFunctionsMenu" aria-label="Atalhos gov.br" aria-controls="headerFunctionsMenu" aria-expanded="false"><i class="fas fa-th" aria-hidden="true"></i> <span class="govbr-shortcuts-label">Atalhos gov.br</span></button><div class="br-list dd-target" id="headerFunctionsMenu" role="group" aria-label="Funcionalidades do painel" hidden><div class="header"><div class="title">Funcionalidades do painel</div></div><span class="br-divider" aria-hidden="true"></span><a class="br-item" href="https://www.gov.br/governodigital/pt-br/estrategias-e-governanca-digital/planos-de-transformacao-digital/ptds-vigentes/midr_ptd_2025_2027_docdiretivo_assinado_assinado_assinado_tarjado.pdf" target="_blank" rel="noopener"><i class="fas fa-file-pdf" aria-hidden="true"></i> Documento do PTD<span class="sr-only"> (abre em nova aba)</span></a><a class="br-item" href="https://www.gov.br/governodigital/pt-br/estrategias-e-governanca-digital/planos-de-transformacao-digital/ptds-vigentes/midr_ptd_2025_2027_anexo_de_entregas_assinado_assinado_assinado-1.pdf" target="_blank" rel="noopener"><i class="fas fa-file-pdf" aria-hidden="true"></i> Anexo de Entregas<span class="sr-only"> (abre em nova aba)</span></a><button type="button" class="br-item" id="btnRefresh" onclick="refreshAll()"><i class="fas fa-sync-alt" aria-hidden="true"></i> Atualizar</button><div class="br-item status-item" aria-live="polite"><i class="fas fa-broadcast-tower" aria-hidden="true"></i> Tempo real · <span id="syncChip">Aguardando…</span></div><button type="button" class="br-item" id="actExportCsv"><i class="fas fa-file-csv" aria-hidden="true"></i> Exportar CSV</button><button type="button" class="br-item" id="actCopyLink"><i class="fas fa-link" aria-hidden="true"></i> Copiar link do painel</button><a class="br-item" id="actOpenSheet" href="#" target="_blank" rel="noopener"><i class="fas fa-table" aria-hidden="true"></i> Abrir planilha de origem<span class="sr-only"> (abre em nova aba)</span></a><span class="br-divider" aria-hidden="true"></span><a class="br-item" href="#" id="menuHelpTrigger"><i class="fas fa-question-circle" aria-hidden="true"></i> Como usar este painel</a><a class="br-item" href="#" id="menuA11yStatementTrigger"><i class="fas fa-universal-access" aria-hidden="true"></i> Declaração de Acessibilidade</a><div class="br-item switch-item"><div class="br-switch right small icon" role="presentation"><input id="obAutoToggle" type="checkbox" name="obAutoToggle" role="switch"><label for="obAutoToggle">Abrir tutorial automaticamente</label></div></div></div></div>
         </div>
-        <div class="header-search-trigger"><button class="br-button circle small" type="button" id="headerSearchTrigger" aria-label="Abrir busca" data-toggle="search" data-target="#headerSearch"><i class="fas fa-search" aria-hidden="true"></i></button></div>
         <span class="br-divider vertical" aria-hidden="true"></span><a class="br-sign-in primary small" id="govbrSignIn" href="https://sso.acesso.gov.br/" target="_blank" rel="noopener">Entrar com&nbsp;<span class="text-black">gov.br</span><span class="sr-only"> (abre em nova aba)</span></a>
       </div>
     </div>
+  </div>
+</header>
+<!-- ── header-bottom-wrap: a partir da v135, o bloco Título+Busca (itens 3/4
+     da Anatomia) vive FORA do elemento header, como irmão dele (igual a
+     #navigation logo abaixo) — não como filho. Isso é proposital, não só
+     estético: position:sticky só mantém um elemento grudado enquanto a
+     rolagem estiver dentro da caixa do elemento PAI. Se este bloco ficasse
+     dentro do header (que é curto — só header-top + este bloco), ele
+     "descolaria" quase que instantaneamente, porque a caixa do header
+     terminaria ali mesmo. Como irmão direto do body da página, ele tem uma
+     caixa-mãe alta o bastante (o restante da página) para continuar
+     grudado durante toda a rolagem, exatamente como #navigation já faz.
+     Tem seu PRÓPRIO .container-lg interno, mantendo o mesmo padding
+     lateral do cabeçalho, sem precisar de hack de margem negativa. No
+     desktop isso é invisível (CSS mantém os dois blocos visualmente
+     colados, como sempre foram). No mobile (≤991.98px), este wrapper vira
+     o ÚNICO elemento sticky do cabeçalho — replicando o site oficial da
+     Codevasf, onde ao rolar a tela só o título+lupa permanecem fixos, e a
+     logo/atalhos/Entrar (header-top, dentro do elemento header) rolam para
+     fora normalmente, em vez do cabeçalho inteiro ocupar ~50% da tela
+     sempre. Ver CSS em @media(max-width:991.98px) mais abaixo. ── -->
+<div class="header-bottom-wrap">
+  <div class="container-lg">
     <div class="header-bottom">
       <div class="header-menu">
         <div class="header-menu-trigger">
@@ -2259,6 +2363,13 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
           <div class="header-subtitle">Painel de Acompanhamento do Plano de Transformação Digital (PTD).</div>
         </div>
       </div>
+      <!-- Ação de busca (🔍): movida para cá (item 3 da Anatomia do Header,
+           ao lado do Título) a partir da v135 — antes vivia lá em cima, no
+           header-actions, junto de Institucional/Atalhos/Entrar. No mobile
+           isso empurrava o header pra 3 linhas cheias. Replicando o site
+           oficial da Codevasf: no celular, a lupa fica ao lado do título,
+           não junto dos atalhos institucionais. -->
+      <div class="header-search-trigger"><button class="br-button circle small" type="button" id="headerSearchTrigger" aria-label="Abrir busca" data-toggle="search" data-target="#headerSearch"><i class="fas fa-search" aria-hidden="true"></i></button></div>
       <!-- Campo de Busca (Anatomia 10): pesquisa por nome de serviço, levando
            à aba e ao registro correspondente. Comportamento 3 (Busca): em
            telas largas funciona como input comum; em telas estreitas, é
@@ -2274,7 +2385,7 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
       </div>
     </div>
   </div>
-</header>
+</div>
 
 <!-- br-tab — faixa de navegação principal. Reúne, na mesma altura das
      abas "Análise do Levantamento" / "Acompanhamento de Projetos", a
@@ -3272,12 +3383,25 @@ function toggleContraste(checked) {
    TABS
 ════════════════════════════════════════════════════════ */
 /* ════════════════════════════════════════════════════════
-   ALTURA DO CABEÇALHO — sincroniza --header-h com a altura real
-   de .br-header. #navigation usa essa variável para seu sticky top:
-   um valor fixo (ex.: 83px) quebra sempre que o cabeçalho muda de
-   altura entre breakpoints (subtitle aparecendo, quebra
-   de linha em telas estreitas etc.) — a navegação fica posicionada
-   atrás do cabeçalho, parecendo "desaparecer" ao rolar a página.
+   ALTURA DO CABEÇALHO — sincroniza duas variáveis CSS com as alturas reais
+   do header-top (.br-header) e do header-bottom-wrap (Título + Busca):
+
+   --header-bottom-top: o "top" onde o header-bottom-wrap gruda.
+     • Desktop (>991.98px): altura do header-top — os dois blocos sticky
+       ficam empilhados, colados, exatamente como um único header sticky
+       sempre pareceu (mesmo efeito visual de antes da v135).
+     • Mobile (≤991.98px): 0 — só este bloco fica fixo; o header-top
+       (logo/atalhos/Entrar) rola para fora normalmente, replicando o
+       site oficial da Codevasf.
+
+   --header-h: o "top" onde #navigation (abas) gruda — sempre a soma de
+     TUDO que está sticky acima dele no momento (no desktop, header-top +
+     header-bottom-wrap; no mobile, só header-bottom-wrap, já que o
+     header-top não é mais sticky nessa faixa).
+
+   Valores fixos (ex.: 83px) quebram sempre que o cabeçalho muda de altura
+   entre breakpoints (subtítulo aparecendo, quebra de linha em telas
+   estreitas etc.) — por isso ambos são medidos, não hardcoded.
 ════════════════════════════════════════════════════════ */
 /* ── Título do Menu lateral (Anatomia oficial): o painel de menu reaproveita
    o mesmo Título do Header, não um rótulo próprio — sincronizado aqui em vez
@@ -3288,16 +3412,35 @@ function toggleContraste(checked) {
   if (src && dst) dst.textContent = src.textContent;
 })();
 
-(function syncHeaderHeight(){
-  var header = document.querySelector('.br-header');
-  if (!header) return;
+(function syncHeaderStickyOffsets(){
+  var headerTop = document.querySelector('.br-header');
+  var headerBottomWrap = document.querySelector('.header-bottom-wrap');
+  if (!headerTop || !headerBottomWrap) return;
+  var mqMobile = window.matchMedia('(max-width:991.98px)');
   function update(){
-    document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+    var topH = headerTop.offsetHeight;
+    var bottomH = headerBottomWrap.offsetHeight;
+    var bottomWrapTop = mqMobile.matches ? 0 : topH;
+    var totalStickyH = mqMobile.matches ? bottomH : (topH + bottomH);
+    var root = document.documentElement.style;
+    root.setProperty('--header-bottom-top', bottomWrapTop + 'px');
+    root.setProperty('--header-h', totalStickyH + 'px');
   }
   update();
   window.addEventListener('resize', update);
-  if (window.ResizeObserver) new ResizeObserver(update).observe(header);
+  if (window.ResizeObserver) {
+    new ResizeObserver(update).observe(headerTop);
+    new ResizeObserver(update).observe(headerBottomWrap);
+  }
+  // Safari < 14 não tem addEventListener em MediaQueryList (só addListener).
+  if (mqMobile.addEventListener) mqMobile.addEventListener('change', update);
+  else if (mqMobile.addListener) mqMobile.addListener(update);
+  // A fonte customizada (Rawline) pode ainda não ter carregado no instante
+  // desta primeira medição, mudando a altura do título (quebra de linha)
+  // depois — por isso remede de novo quando ela termina de carregar.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(update);
 })();
+
 
 /* ════════════════════════════════════════════════════════
    CARROSSEL DE DEPOIMENTOS — Componente Carousel (gov.br DS).
