@@ -688,7 +688,11 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
     .header-bottom-wrap .header-menu-trigger{margin-right:var(--sp2);margin-top:2px;flex-shrink:0;}
     .header-bottom-wrap .header-info{min-width:0;}
     .header-bottom-wrap .header-title{
-      color:var(--color);font-weight:700;text-transform:uppercase;
+      color:var(--color);font-weight:700;
+      /* Sem text-transform:uppercase — o texto já é escrito com iniciais
+         maiúsculas e o resto minúsculo ("Companhia de Desenvolvimento dos
+         Vales..."), então a caixa alta forçada aqui era redundante e
+         deixava tudo em maiúsculas, contra o padrão pedido. */
       font-size:var(--fs-base);line-height:1.25;letter-spacing:.2px;
       /* Especificação Header > Título > Quantidade de Caracteres: até 2
          linhas; acima disso, truncar com elipse. */
@@ -756,7 +760,12 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
     .br-button.circle[aria-expanded="true"]{background:var(--blue-warm-vivid-5);color:var(--interactive);}
     /* ── DROPDOWN (data-toggle="dropdown"), conforme Utilitário JS gov.br DS ── */
     .dropdown-wrap{position:relative;display:inline-flex;}
-    .dd-target{position:absolute;top:calc(100% + 6px);right:0;z-index:var(--z-layer-2);
+    /* z-index acima de #navigation (z:calc(--z-layer-3 - 1) = 2999): antes
+       usava --z-layer-2 (2000), mais baixo que a faixa de abas sticky —
+       qualquer dropdown (Institucional, Atalhos gov.br, Alertas
+       operacionais) que abrisse perto do título/abas no mobile renderizava
+       POR BAIXO deles, com o conteúdo cortado visualmente. */
+    .dd-target{position:absolute;top:calc(100% + 6px);right:0;z-index:calc(var(--z-layer-3) + 10);
       min-width:220px;max-width:calc(100vw - 32px);background:var(--pure-0);border:var(--w-sm) solid var(--gray-10);
       border-radius:var(--r-md);box-shadow:var(--sh-level4);overflow:hidden;}
     .dd-target[hidden]{display:none;}
@@ -1169,6 +1178,18 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
        mantém sua largura "natural" e o conteúdo vaza horizontalmente. */
     @media(max-width:575.98px){
       .tab-bar-actions{width:100%;justify-content:flex-start;}
+    }
+    /* Sino de Alertas operacionais: removido da versão mobile a pedido —
+       além de disputar espaço com as abas em telas estreitas, o painel
+       (com o dropdown corrigido para abrir por cima de tudo, ver .dd-target
+       acima) ainda ficava apertado demais para essa ação secundária no
+       celular. Continua disponível normalmente no desktop. Duas regras
+       redundantes de propósito: :has() cobre o wrapper inteiro (sem sobrar
+       um espaço vazio do dropdown-wrap) em navegadores que suportam;
+       display:none direto no botão garante que ele suma mesmo sem :has(). */
+    @media(max-width:991.98px){
+      .tab-bar-actions .dropdown-wrap:has(#btnNotifications){display:none;}
+      #btnNotifications{display:none;}
     }
 
 
