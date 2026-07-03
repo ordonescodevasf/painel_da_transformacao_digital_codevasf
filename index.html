@@ -438,35 +438,34 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
     .dd-target button.br-item[aria-expanded="true"] i{transform:rotate(180deg);}
     .br-header{
       background:var(--background);
-      /* box-shadow e border-bottom mudaram para .header-bottom-wrap (ver
-         abaixo): agora ele é o último bloco visual do cabeçalho tanto no
-         desktop quanto no mobile, então é ele quem "fecha" visualmente o
-         cabeçalho com sombra + friso azul, não mais o header-top isolado. */
+      /* Nem este bloco nem o header-bottom-wrap ficam sticky (ver abaixo) —
+         ao rolar a página, o cabeçalho institucional inteiro (logo,
+         atalhos, Entrar, título, busca) sai de cena normalmente. Só a
+         faixa de abas (#navigation, mais abaixo) permanece fixa: é
+         proposital, pedido explícito para toda largura de tela, não só
+         mobile — ao rolar, o que deve continuar visível é apenas
+         "Análise do Levantamento" / "Acompanhamento de Projetos". */
       padding-top:var(--sp2);
-      position:sticky;top:0;z-index:var(--z-layer-3);
     }
     body.contraste-alto .br-header{background:#000;}
     .br-header .container-lg{
       max-width:100%;margin:0 auto;
       padding:0 16px;width:100%;
     }
-    /* ── header-bottom-wrap (Título + Busca, itens 3/4 da Anatomia): a
-       partir da v135 vive como irmão da tag header (ver comentário no HTML),
-       com posicionamento sticky PRÓPRIO. O "top" onde ele gruda é dado pela
-       variável --header-bottom-top, calculada em JS (função
-       syncHeaderStickyOffsets): no desktop ela vale a altura do header-top
-       (para os dois ficarem colados, empilhados, como sempre foram — mesmo
-       efeito visual de antes, só que agora com dois elementos sticky em vez
-       de um); no mobile ela vale 0 (só este bloco fica fixo; o header-top —
-       logo/atalhos/Entrar — rola para fora normalmente, replicando o site
-       oficial da Codevasf). ── */
+    /* ── header-bottom-wrap (Título + Busca, itens 3/4 da Anatomia): vive
+       como irmão da tag header (ver comentário no HTML) só por herança da
+       v135 (quando ainda era sticky no mobile) — hoje não é mais sticky em
+       nenhuma largura, mas manter como irmão continua inofensivo e evita
+       reestruturar o HTML de novo. Sem box-shadow: a versão anterior tinha
+       um box-shadow aqui que, por causa do blur (--sh-level1 tem uma
+       camada "0 0 4px", que espalha em TODAS as direções, inclusive pra
+       cima), criava uma linha fantasma bem na costura com o header-top —
+       um "divisor" que nunca existiu no desenho original, onde os dois
+       blocos eram uma coisa só sem sombra interna. Removido. ── */
     .header-bottom-wrap{
       background:var(--background);
-      box-shadow:var(--sh-sm);
       border-bottom:var(--w-lg) solid var(--cv-blue);
       padding:var(--sp2) 0;
-      position:sticky;top:var(--header-bottom-top, 83px);
-      z-index:var(--z-layer-3);
     }
     body.contraste-alto .header-bottom-wrap{background:#000;border-bottom-color:var(--gold-vivid-20);}
     .header-bottom-wrap .container-lg{
@@ -615,11 +614,6 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
        padding dos botões — removendo de vez o width:100%/flex-wrap
        que causava a 3ª linha. */
     @media(max-width:991.98px){
-      /* Sticky desacoplado (ver .header-bottom-wrap, que assumiu sozinho
-         a sombra/friso azul/posição fixa): o header-top volta a rolar
-         normalmente junto com o resto da página — só Título+Busca
-         permanecem fixos ao rolar, como no site oficial. */
-      .br-header{position:static;}
       /* Logo bem menor — replicando o "do lado da logo, que fica MUITO
          menor" pedido pelo usuário. min-width:0 permite encolher além
          dos 140px fixos usados no desktop. */
@@ -1122,7 +1116,7 @@ document.addEventListener('keydown',function(ev){if(ev.target&&ev.target.id==='h
        dropdown tem sua própria rolagem interna pequena, e um top fixo
        pensado para a página inteira empurra a aba "Prazo Vencido" para
        fora da área visível do painel ao trocar para "Risco Alto". */
-    #navigation{position:sticky;top:var(--header-h, 83px);z-index:calc(var(--z-layer-3) - 1);}
+    #navigation{position:sticky;top:0;z-index:calc(var(--z-layer-3) - 1);}
     .tab-nav{overflow-x:auto;scrollbar-width:none;}
     .tab-nav::-webkit-scrollbar{display:none;}
     @media(max-width:767.98px){
@@ -3383,26 +3377,14 @@ function toggleContraste(checked) {
    TABS
 ════════════════════════════════════════════════════════ */
 /* ════════════════════════════════════════════════════════
-   ALTURA DO CABEÇALHO — sincroniza duas variáveis CSS com as alturas reais
-   do header-top (.br-header) e do header-bottom-wrap (Título + Busca):
+   STICKY DO CABEÇALHO — decisão de produto: ao rolar a página (em
+   qualquer largura de tela, mobile ou desktop), o cabeçalho institucional
+   inteiro (logo, atalhos, Entrar, título, busca) some normalmente. Só a
+   faixa de abas (#navigation) permanece fixa no topo, com top:0 — por
+   isso não há mais nenhuma variável CSS de altura pra sincronizar via
+   JS aqui (havia uma versão anterior que empilhava header-top +
+   header-bottom-wrap como dois blocos sticky; foi simplificada). ── */
 
-   --header-bottom-top: o "top" onde o header-bottom-wrap gruda.
-     • Desktop (>991.98px): altura do header-top — os dois blocos sticky
-       ficam empilhados, colados, exatamente como um único header sticky
-       sempre pareceu (mesmo efeito visual de antes da v135).
-     • Mobile (≤991.98px): 0 — só este bloco fica fixo; o header-top
-       (logo/atalhos/Entrar) rola para fora normalmente, replicando o
-       site oficial da Codevasf.
-
-   --header-h: o "top" onde #navigation (abas) gruda — sempre a soma de
-     TUDO que está sticky acima dele no momento (no desktop, header-top +
-     header-bottom-wrap; no mobile, só header-bottom-wrap, já que o
-     header-top não é mais sticky nessa faixa).
-
-   Valores fixos (ex.: 83px) quebram sempre que o cabeçalho muda de altura
-   entre breakpoints (subtítulo aparecendo, quebra de linha em telas
-   estreitas etc.) — por isso ambos são medidos, não hardcoded.
-════════════════════════════════════════════════════════ */
 /* ── Título do Menu lateral (Anatomia oficial): o painel de menu reaproveita
    o mesmo Título do Header, não um rótulo próprio — sincronizado aqui em vez
    de duplicar o texto, para nunca dessincronizar se o título do header mudar. ── */
@@ -3410,35 +3392,6 @@ function toggleContraste(checked) {
   var src = document.querySelector('.header-title');
   var dst = document.getElementById('sectionMenuTitle');
   if (src && dst) dst.textContent = src.textContent;
-})();
-
-(function syncHeaderStickyOffsets(){
-  var headerTop = document.querySelector('.br-header');
-  var headerBottomWrap = document.querySelector('.header-bottom-wrap');
-  if (!headerTop || !headerBottomWrap) return;
-  var mqMobile = window.matchMedia('(max-width:991.98px)');
-  function update(){
-    var topH = headerTop.offsetHeight;
-    var bottomH = headerBottomWrap.offsetHeight;
-    var bottomWrapTop = mqMobile.matches ? 0 : topH;
-    var totalStickyH = mqMobile.matches ? bottomH : (topH + bottomH);
-    var root = document.documentElement.style;
-    root.setProperty('--header-bottom-top', bottomWrapTop + 'px');
-    root.setProperty('--header-h', totalStickyH + 'px');
-  }
-  update();
-  window.addEventListener('resize', update);
-  if (window.ResizeObserver) {
-    new ResizeObserver(update).observe(headerTop);
-    new ResizeObserver(update).observe(headerBottomWrap);
-  }
-  // Safari < 14 não tem addEventListener em MediaQueryList (só addListener).
-  if (mqMobile.addEventListener) mqMobile.addEventListener('change', update);
-  else if (mqMobile.addListener) mqMobile.addListener(update);
-  // A fonte customizada (Rawline) pode ainda não ter carregado no instante
-  // desta primeira medição, mudando a altura do título (quebra de linha)
-  // depois — por isso remede de novo quando ela termina de carregar.
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(update);
 })();
 
 
